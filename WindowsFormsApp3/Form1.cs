@@ -80,6 +80,7 @@ namespace WindowsFormsApp3
             //TransparencyKey = Color.White;
 
             pdfWebView = new PdfWebView();
+            pdfWebView.FormClosing += PdfWebView_FormClosing;
             AttachWebView();
 
             duplicateManagerView = new DuplicateManagerView(indexer);
@@ -105,6 +106,15 @@ namespace WindowsFormsApp3
             pdfWebView.FormBorderStyle = FormBorderStyle.Sizable;
 
             WebViewIsDetached = true;
+        }
+
+        private void PdfWebView_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (WebViewIsDetached)
+            {
+                e.Cancel = true;
+                AttachWebView();
+            }
         }
 
         private void FindAllPdfFiles(string path, bool recursive = false)
