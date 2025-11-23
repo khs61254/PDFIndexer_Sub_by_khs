@@ -29,10 +29,8 @@ namespace PDFIndexerOCR
             device = PaddleDevice.Mkldnn(cpuMathThreadCount: 1, glogEnabled: false);
         }
 
-        public PaddleOcrResult OCR(string path)
+        public PaddleOcrResult OCR(byte[] image)
         {
-            byte[] file = File.ReadAllBytes(path);
-
             using (PaddleOcrAll all = new PaddleOcrAll(model, device)
             {
                 // 요거 켜면 정확도 낮아짐
@@ -40,7 +38,7 @@ namespace PDFIndexerOCR
                 //Enable180Classification = true,
             })
             {
-                using (Mat src = Cv2.ImDecode(file, ImreadModes.Color))
+                using (Mat src = Cv2.ImDecode(image, ImreadModes.Color))
                 {
                     PaddleOcrResult result = all.Run(src);
                     //Console.WriteLine($"Detected:\n{result.Text}");

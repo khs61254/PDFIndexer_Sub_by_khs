@@ -176,6 +176,8 @@
     <Compile Include="SetupWizard\SetupWizardForm.Designer.cs">
       <DependentUpon>SetupWizardForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="BackgroudTask\OCRTask.cs" />
+    <Compile Include="BackgroudTask\AbstractTask.cs" />
     <EmbeddedResource Include="DebugForm.resx">
       <DependentUpon>DebugForm.cs</DependentUpon>
     </EmbeddedResource>

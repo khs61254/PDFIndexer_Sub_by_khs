@@ -97,15 +97,43 @@ namespace PDFIndexerOCR
                     {
                         try
                         {
-                            string input = reader.ReadLine();
+                            /**
+                             * 전송 데이터
+                             * | 헤더 (4 bytes int) | body (n bytes)        |
+                             * | ----------------- | --------------------- |
+                             * | 데이터 길이         | 실 이미지 데이터 n bytes |
+                             */
+
+                            // 헤더 읽기
+                            byte[] lengthBuffer = new byte[4];
+                            int bytesRead = server.Read(lengthBuffer, 0, 4);
 
                             // 잘못된 입력 --> 연결 종료
-                            if (string.IsNullOrEmpty(input)) break;
+                            if (bytesRead == 0) break;
 
-                            // TODO: OCR 수행
+                            int dataLength = BitConverter.ToInt32(lengthBuffer, 0);
+
+                            // 바디 읽기
+                            byte[] imageBuffer = new byte[dataLength];
+                            int totalRead = 0;
+
+                            // 모두 읽기
+                            while (totalRead < dataLength)
+                            {
+                                int read = server.Read(imageBuffer, totalRead, dataLength - totalRead);
+
+                                // 읽은 바이트 수가 0이면 종료
+                                // 다 읽었거나, 들어온 데이터가 없거나 아님 클라이언트가 보내지 않았던가 --> 잘못된 입력
+                                if (read == 0) break;
+
+                                totalRead += read;
+                            }
+
+                            Console.WriteLine($"{totalRead} bytes received. Start OCR");
+
                             List<OCRRegion> regions = new List<OCRRegion>();
 
-                            PaddleOcrResult result = OCRProvider.OCR(input);
+                            PaddleOcrResult result = OCRProvider.OCR(imageBuffer);
                             foreach (PaddleOcrResultRegion region in result.Regions)
                             {
                                 regions.Add(new OCRRegion()
@@ -120,6 +148,8 @@ namespace PDFIndexerOCR
                                     Angle = region.Rect.Angle,
                                 });
                             }
+
+                            Console.WriteLine($"OCR Done: {result.Text}");
 
                             var res = new OCRPipeResponse(result.Text, regions.ToArray());
                             var response = PipeResponse.ToJSON(res);
