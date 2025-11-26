@@ -12,6 +12,8 @@ namespace PDFIndexer
 {
     internal static class Program
     {
+        private static readonly Mutex Mutex = new Mutex(initiallyOwned: false, name: "com.github.686a.PDFIndexer.MainProcess");
+
         private static readonly Properties.Settings AppSettings = Properties.Settings.Default;
 
         /// <summary>
@@ -20,6 +22,9 @@ namespace PDFIndexer
         [STAThread]
         static void Main()
         {
+            // 단일 인스턴스 허용
+            if (!Mutex.WaitOne(TimeSpan.Zero, true)) return;
+
             Logger.Write(JournalLevel.Info, "프로그램 진입점");
 
             /**
@@ -49,6 +54,8 @@ namespace PDFIndexer
             Application.Run(new Form1(luceneProvider));
 
             luceneProvider.Dispose();
+
+            Mutex.ReleaseMutex();
         }
 
         // 설정 기본값 저장
