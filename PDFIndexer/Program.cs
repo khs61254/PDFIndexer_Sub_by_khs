@@ -1,6 +1,7 @@
 ﻿using PDFIndexer.BackgroundTask;
 using PDFIndexer.Journal;
 using PDFIndexer.SearchEngine;
+using PDFIndexer.Services;
 using PDFIndexer.SetupWizard;
 using PDFIndexerShared;
 using System;
@@ -69,6 +70,8 @@ namespace PDFIndexer
             new DBContext();
 
             // 인덱서
+            new SearchEngineContext(appDataPath);
+
             LuceneProvider = new LuceneProvider(appDataPath);
             LuceneProvider.Initialize();
 
@@ -101,19 +104,19 @@ namespace PDFIndexer
         {
             _Disposing = true;
 
-            Logger.Write("프로세스 정리 - FileWatcher");
+            Logger.Write("[1/4] 프로세스 정리 : FileWatcher");
             FileWatcher.Dispose();
 
-            Logger.Write("프로세스 정리 - TaskManager");
+            Logger.Write("[2/4] 프로세스 정리 - TaskManager");
             TaskManager.Stop();
 
-            Logger.Write("프로세스 정리 - LuceneProvider");
-            LuceneProvider.Dispose();
+            Logger.Write("[3/4] 프로세스 정리 - SearchEngineContext");
+            SearchEngineContext.Dispose();
 
-            Logger.Write("프로세스 정리 - DBContext");
+            Logger.Write("[4/4] 프로세스 정리 - DBContext");
             DBContext.Dispose();
 
-            Logger.Write("프로세스 정리 끝");
+            Logger.Write("프로세스 정리 완료");
         }
     }
 }

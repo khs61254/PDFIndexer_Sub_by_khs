@@ -26,6 +26,7 @@ using static Lucene.Net.Util.Fst.Builder;
 using static Lucene.Net.Util.Packed.PackedInt32s;
 using Directory = System.IO.Directory;
 using PDFIndexer.SearchEngine;
+using PDFIndexer.Services;
 
 namespace PDFIndexer
 {
@@ -42,7 +43,7 @@ namespace PDFIndexer
 
         // private Uri currentPdf;
 
-        private LuceneProvider Provider;
+        private LuceneProvider Provider = SearchEngineContext.Provider;
         private Indexer Indexer;
         private Searcher Searcher;
 
@@ -81,7 +82,6 @@ namespace PDFIndexer
 #if DEBUG
             new DebugForm().Show();
 #endif
-            Provider = provider;
 
             // TODO: Asynchronous loading
             Indexer = new Indexer(Provider);
@@ -183,7 +183,6 @@ namespace PDFIndexer
                 pdfs.Clear();
                 FindAllPdfFiles(basePath, true);
                 Indexer.IndexPdfs(pdfs.ToArray());
-                Provider.Initialize();
             });
 
             IsIndexing = false;

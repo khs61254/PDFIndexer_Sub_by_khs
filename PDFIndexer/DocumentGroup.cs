@@ -47,6 +47,9 @@ namespace PDFIndexer
 
         public void Add(int page, ScoreDoc scoreDoc)
         {
+            // TODO: OCR 인덱스 데이터 처리
+            if (Documents.ContainsKey(page)) return;
+
             Documents.Add(page, scoreDoc.Score);
             IndexerScore += scoreDoc.Score;
             _MatchPages++;

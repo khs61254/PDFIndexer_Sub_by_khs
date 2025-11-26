@@ -5,6 +5,7 @@ using Lucene.Net.QueryParsers.Classic;
 using Lucene.Net.QueryParsers.Simple;
 using Lucene.Net.Search;
 using Lucene.Net.Util;
+using PDFIndexer.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,19 +36,24 @@ namespace PDFIndexer.SearchEngine
 
             SimpleQueryParser parser = new SimpleQueryParser(analyzer, "content");
             Query query = parser.Parse(text);
+            if (query == null) return null;
             TopDocs topDocs = providerSearcher.Search(query, max);
+
+            Provider.ReleaseSearcher(providerSearcher);
 
             return topDocs;
         }
 
         public DocumentGroup[] GroupDocuments(ScoreDoc[] scoreDocs)
         {
+            var searcher = SearchEngineContext.Provider.GetIndexSearcher();
+
             // 경로를 기준으로 그룹
             Dictionary<string, DocumentGroup> result = new Dictionary<string, DocumentGroup>();
 
             foreach (var scoreDoc in scoreDocs)
             {
-                Document doc = Provider.SearchDocument(scoreDoc.Doc);
+                Document doc = searcher.Doc(scoreDoc.Doc);
                 string path = doc.Get("path");
                 int page = int.Parse(doc.Get("page"));
 
@@ -74,6 +80,8 @@ namespace PDFIndexer.SearchEngine
             var resultArray = result.Values.ToArray();
             Array.Sort(resultArray, (a, b) => b.TotalScore.CompareTo(a.TotalScore));
 
+            SearchEngineContext.Provider.ReleaseSearcher(searcher);
+
             return resultArray;
         }
 
@@ -88,19 +96,22 @@ namespace PDFIndexer.SearchEngine
             else
                 term = new Term("path", queryRaw);
 
+            var searcher = Provider.GetIndexSearcher();
             Query query = new TermQuery(term);
-            TopDocs topDocs = Provider.GetIndexSearcher().Search(query, n: 1);
+            TopDocs topDocs = searcher.Search(query, n: 1);
 
             // 결과 없음 == 인덱싱 안됨
             //TopDocs topDocs = indexer.;
             if (topDocs.ScoreDocs.Length == 0) return true;
 
             // 마지막 수정 시간이 다르면 인덱스 업데이트 --> 없다고 간주
-            Document document = Provider.SearchDocument(topDocs.ScoreDocs[0].Doc);
+            Document document = searcher.Doc(topDocs.ScoreDocs[0].Doc);
             long lastModifiedFromIndex = Int64.Parse(document.Get("lastModified"));
             long lastModifiedFromFile = IOUtil.GetLastModifiedFromFile(pdf);
-            if (lastModifiedFromIndex != lastModifiedFromFile) return true;
 
+            Provider.ReleaseSearcher(searcher);
+
+            if (lastModifiedFromIndex != lastModifiedFromFile) return true;
             return false;
         }
 
@@ -180,9 +191,11 @@ namespace PDFIndexer.SearchEngine
 
             for (int i = 0; i < topDocs.ScoreDocs.Length; i++)
             {
-                var doc = Provider.SearchDocument(topDocs.ScoreDocs[i].Doc);
+                var doc = searcher.Doc(topDocs.ScoreDocs[i].Doc);
                 result.Add(new SearchItem(doc));
             }
+
+            Provider.ReleaseSearcher(searcher);
 
             return result.ToArray();
         }

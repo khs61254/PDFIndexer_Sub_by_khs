@@ -2,6 +2,8 @@
 using Lucene.Net.Documents;
 using PDFIndexer.Journal;
 using PDFIndexer.Models;
+using PDFIndexer.SearchEngine;
+using PDFIndexer.Services;
 using PDFIndexerShared;
 using System;
 using System.Collections.Generic;
@@ -15,6 +17,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UglyToad.PdfPig;
+using static Lucene.Net.Util.Packed.PackedInt32s;
 
 namespace PDFIndexer.BackgroundTask
 {
@@ -126,13 +129,21 @@ namespace PDFIndexer.BackgroundTask
                                 Client.Write(image, 0, image.Length);
                                 Client.Flush();
 
-                                string data = Reader.ReadLine();
-                                OCRPipeResponse response = PipeResponse.FromJSON<OCRPipeResponse>(data);
+                                // TODO: 파이프 끊어짐 처리
 
-                                result += response.Text + "\n";
+                                string data = Reader.ReadLine();
+                                if (data != null)
+                                {
+                                    OCRPipeResponse response = PipeResponse.FromJSON<OCRPipeResponse>(data);
+
+                                    result += response.Text + "\n";
+                                }
                             }
 
-                            Logger.Write($"[OCRTask-IPC] {task.Path}/{task.Page} - {result}");
+                            if (result.Length > 0)
+                            {
+                                Logger.Write($"[OCRTask-IPC] OCR Done {task.Path}/{task.Page} : Length {result.Length}");
+                            }
 
                             // 인덱스 저장
                             Document doc = new Document
@@ -142,7 +153,11 @@ namespace PDFIndexer.BackgroundTask
                                 new TextField("content", result, Field.Store.YES),
                                 new StringField("isOCRData", "1", Field.Store.YES),
                             };
-                            // TODO: Write to index
+
+                            var indexWriter = SearchEngineContext.Provider.GetIndexWriter();
+                            indexWriter.AddDocument(doc);
+                            indexWriter.Commit();
+                            SearchEngineContext.Provider.MarkAsDirty();
                         }
 
                         // DB 업데이트
@@ -151,7 +166,7 @@ namespace PDFIndexer.BackgroundTask
 
                         Logger.Write($"[OCRTask-IPC] {task.Path}/{task.Page} Done");
 
-                        Thread.Sleep(5000);
+                        Thread.Sleep(3000);
 
                         // 완료 표시
                         task.Done = true;
@@ -167,7 +182,7 @@ namespace PDFIndexer.BackgroundTask
         {
             try
             {
-                IPCThread.Abort();
+                if (IPCThread != null) IPCThread.Abort();
 
                 if (OCRProcess != null && !OCRProcess.HasExited) OCRProcess.Kill();
             } catch { }
@@ -195,7 +210,11 @@ namespace PDFIndexer.BackgroundTask
                 foreach (var image in images)
                 {
                     image.TryGetPng(out var bytes);
-                    Images.Enqueue(bytes);
+                    // TODO: 최소 이미지 크기
+                    if (bytes.Length >= 1024)
+                    {
+                        Images.Enqueue(bytes);
+                    }
                 }
             }
 

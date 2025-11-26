@@ -174,6 +174,7 @@
     <Compile Include="MainView\PdfWebView.Designer.cs">
       <DependentUpon>PdfWebView.cs</DependentUpon>
     </Compile>
+    <Compile Include="Services\SearchEngineContext.cs" />
     <Compile Include="SetupWizard\Phase.cs" />
     <Compile Include="SetupWizard\Phases\ChoosePathPhase.cs" />
     <Compile Include="SetupWizard\Phases\DonePhase.cs" />

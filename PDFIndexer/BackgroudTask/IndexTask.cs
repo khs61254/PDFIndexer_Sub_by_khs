@@ -26,7 +26,6 @@ namespace PDFIndexer.BackgroudTask
         public override void Run()
         {
             Indexer.IndexPdfs(new string[] { Path });
-            Provider.Initialize();
         }
 
         public override string GetTaskHash()

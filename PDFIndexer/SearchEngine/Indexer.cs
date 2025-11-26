@@ -1,6 +1,7 @@
 ﻿using LiteDB;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using PDFIndexer.BackgroudTask;
 using PDFIndexer.BackgroundTask;
 using PDFIndexer.Journal;
 using PDFIndexer.Models;
@@ -97,7 +98,7 @@ namespace PDFIndexer.SearchEngine
 
             Logger.Write(JournalLevel.Info, "IndexPdfs 정리 중..");
             writer.Commit();
-            writer.Dispose();
+            Provider.MarkAsDirty();
 
             Logger.Write(JournalLevel.Info, "IndexPdfs 완료.");
         }
@@ -156,8 +157,7 @@ namespace PDFIndexer.SearchEngine
             // 삭제 완료 --> 인덱스 저장
             writer.Commit();
             writer.Dispose();
-
-            Provider.Initialize();
+            Provider.MarkAsDirty();
 
             // 업데이트가 필요한 문서들 업데이트
             //indexer.IndexPdfs(toUpdate.ToArray());

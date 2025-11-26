@@ -24,8 +24,10 @@ namespace PDFIndexer.SearchEngine
 
         private static LuceneDirectory IndexDirectory;
         private static Analyzer Analyzer;
+        private static IndexWriter Writer;
+        [Obsolete("Deprecated. Use `GetIndexSearcher` instead.")]
         private static IndexReader Reader;
-        private static IndexSearcher Searcher;
+        private static SearcherManager SearcherManager;
 
         private static bool _IsDisposed;
 
@@ -98,20 +100,23 @@ namespace PDFIndexer.SearchEngine
             IndexDirectory = FSDirectory.Open(Path.Combine(BasePath, "index"));
             Analyzer = new CJKAnalyzer(luceneVersion);
 
-            try
-            {
-                Searcher = InitializeIndexSearcher();
-                // SetReadyState(true);
+            GetIndexWriter();
+            SearcherManager = new SearcherManager(Writer, true, null);
 
-                Logger.Write("기존 인덱스 찾음");
-            }
-            catch (DirectoryNotFoundException)
-            {
-                // 인덱스 없음
-                Searcher = null;
+            //try
+            //{
+            //    Searcher = InitializeIndexSearcher();
+            //    // SetReadyState(true);
 
-                Logger.Write(JournalLevel.Warning, "디스크에 저장된 인덱스 없음");
-            }
+            //    Logger.Write("기존 인덱스 찾음");
+            //}
+            //catch (DirectoryNotFoundException)
+            //{
+            //    // 인덱스 없음
+            //    Searcher = null;
+
+            //    Logger.Write(JournalLevel.Warning, "디스크에 저장된 인덱스 없음");
+            //}
 
             Logger.Write(JournalLevel.Info, "LuceneProvider 초기화 --> 완료");
 
@@ -126,13 +131,36 @@ namespace PDFIndexer.SearchEngine
 
         public IndexWriter GetIndexWriter()
         {
-            IndexWriterConfig indexConfig = new IndexWriterConfig(luceneVersion, Analyzer);
-            indexConfig.OpenMode = OpenMode.CREATE;
-            IndexWriter writer = new IndexWriter(IndexDirectory, indexConfig);
+            if (Writer == null)
+            {
+                IndexWriterConfig indexConfig = new IndexWriterConfig(luceneVersion, Analyzer);
+                indexConfig.OpenMode = OpenMode.CREATE_OR_APPEND;
+                Writer = new IndexWriter(IndexDirectory, indexConfig);
+            }
 
-            return writer;
+            return Writer;
         }
 
+        public void ReplaceIndexWriter()
+        {
+            try
+            {
+                Writer.Dispose();
+            }
+            finally
+            {
+                if (IndexWriter.IsLocked(IndexDirectory))
+                {
+                    IndexWriter.Unlock(IndexDirectory);
+                }
+            }
+
+            IndexWriterConfig indexConfig = new IndexWriterConfig(luceneVersion, Analyzer);
+            indexConfig.OpenMode = OpenMode.CREATE;
+            Writer = new IndexWriter(IndexDirectory, indexConfig);
+        }
+
+        [Obsolete("Deprecated. Use `GetIndexSearcher` instead.")]
         public IndexReader GetIndexReader()
         {
             return Reader;
@@ -145,12 +173,17 @@ namespace PDFIndexer.SearchEngine
 
         public IndexSearcher GetIndexSearcher()
         {
-            return Searcher;
+            return SearcherManager.Acquire();
         }
 
-        public Document SearchDocument(int doc)
+        public void ReleaseSearcher(IndexSearcher searcher)
         {
-            return Searcher.Doc(doc);
+            SearcherManager.Release(searcher);
+        }
+
+        public void MarkAsDirty()
+        {
+            SearcherManager.MaybeRefresh();
         }
     }
 }
