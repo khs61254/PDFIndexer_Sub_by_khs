@@ -26,7 +26,7 @@ namespace PDFIndexerOCR
 
         public Paddle()
         {
-            device = PaddleDevice.Mkldnn(cpuMathThreadCount: 1, glogEnabled: false);
+            device = PaddleDevice.Onnx(cpuMathThreadCount: 4, glogEnabled: false);
         }
 
         public PaddleOcrResult OCR(byte[] image)
@@ -41,11 +41,6 @@ namespace PDFIndexerOCR
                 using (Mat src = Cv2.ImDecode(image, ImreadModes.Color))
                 {
                     PaddleOcrResult result = all.Run(src);
-                    //Console.WriteLine($"Detected:\n{result.Text}");
-                    //foreach (PaddleOcrResultRegion region in result.Regions)
-                    //{
-                    //    Console.WriteLine($"Text:{region.Text}, Score:{region.Score}, RectCenter:{region.Rect.Center}, RectSize:{region.Rect.Size}, Angle:{region.Rect.Angle}");
-                    //}
 
                     return result;
                 }
