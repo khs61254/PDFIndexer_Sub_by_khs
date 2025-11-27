@@ -1,11 +1,16 @@
-﻿using Lucene.Net.Documents;
+﻿using LiteDB;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using PDFIndexer.BackgroudTask;
+using PDFIndexer.BackgroundTask;
 using PDFIndexer.Journal;
+using PDFIndexer.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
@@ -31,12 +36,17 @@ namespace PDFIndexer.SearchEngine
 
             var writer = Provider.GetIndexWriter();
 
+            var dbCollection = DBContext.DB.GetCollection<IndexedDocument>("indexed");
+
             foreach (var path in pdfs)
             {
+                // 프로그램 종료 체크
+                if (Program.Disposing) return;
+
                 var filename = (path.Split('\\').LastOrDefault() ?? path).Replace(".pdf", "");
 
-                var hash = IOUtil.GetHashFromFile(path);
-                var lastModified = IOUtil.GetLastModifiedFromFile(path).ToString();
+                string hash = IOUtil.GetHashFromFile(path);
+                long lastModified = IOUtil.GetLastModifiedFromFile(path);
 
                 using (PdfDocument pdf = PdfDocument.Open(path))
                 {
@@ -44,6 +54,9 @@ namespace PDFIndexer.SearchEngine
                     var pages = pdf.GetPages();
                     foreach (var page in pages)
                     {
+                        // 프로그램 종료 체크
+                        if (Program.Disposing) return;
+
                         // 기본 메타데이터
                         Document doc = new Document
                         {
@@ -51,29 +64,44 @@ namespace PDFIndexer.SearchEngine
                             new StringField("path", path, Field.Store.YES),
                             new Int32Field("page", page.Number, Field.Store.YES),
                             new StringField("md5", hash, Field.Store.YES),
-                            new StringField("lastModified", lastModified, Field.Store.YES),
+                            new StringField("lastModified", lastModified.ToString(), Field.Store.YES),
+                            new StringField("isOCRData", "0", Field.Store.YES),
                         };
 
                         // 페이지 내용 (텍스트만)
                         string content = ContentOrderTextExtractor.GetText(page);
                         doc.Add(new TextField("content", content, Field.Store.YES));
 
-                        // TODO: Cron task에 이미지 OCR
+                        // DB 업데이트
+                        var dbItem = new IndexedDocument
+                        {
+                            _id = $"{path}//{page.Number}",
+                            Path = path,
+                            Page = page.Number,
+                            MD5 = hash,
+                            LastModified = lastModified,
+                            OCRDone = false,
+                        };
+                        dbCollection.Upsert(dbItem);
 
+                        // 인덱스 추가
                         writer.AddDocument(doc);
+
+                        // 이미지 OCR task enqueue
+                        TaskManager.Enqueue(new OCRTask(path, page.Number));
                     }
 
                     // Logger.Write($"IndexPdfs - Index done: {path} with {pages.Count()} pages");
                 }
             }
 
+            if (Program.Disposing) return;
+
             Logger.Write(JournalLevel.Info, "IndexPdfs 정리 중..");
             writer.Commit();
-            writer.Dispose();
+            Provider.MarkAsDirty();
 
             Logger.Write(JournalLevel.Info, "IndexPdfs 완료.");
-
-            Provider.Initialize();
         }
 
         public void CleanupIndexes()
@@ -130,8 +158,7 @@ namespace PDFIndexer.SearchEngine
             // 삭제 완료 --> 인덱스 저장
             writer.Commit();
             writer.Dispose();
-
-            Provider.Initialize();
+            Provider.MarkAsDirty();
 
             // 업데이트가 필요한 문서들 업데이트
             //indexer.IndexPdfs(toUpdate.ToArray());

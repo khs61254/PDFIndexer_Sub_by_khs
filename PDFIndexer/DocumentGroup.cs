@@ -47,8 +47,24 @@ namespace PDFIndexer
 
         public void Add(int page, ScoreDoc scoreDoc)
         {
-            Documents.Add(page, scoreDoc.Score);
-            IndexerScore += scoreDoc.Score;
+            // 중복 페이지가 들어오면, 점수가 높은 걸로 저장
+            // 중복 페이지가 들어오는 경우 --> OCR 데이터 또는 콘텐츠 데이터
+            if (Documents.ContainsKey(page))
+            {
+                Documents.TryGetValue(page, out float storedScore);
+                if (scoreDoc.Score > storedScore)
+                {
+                    Documents.Remove(page);
+                    Documents.Add(page, scoreDoc.Score);
+
+                    IndexerScore = IndexerScore - storedScore + scoreDoc.Score;
+                }
+            } else
+            {
+                Documents.Add(page, scoreDoc.Score);
+                IndexerScore += scoreDoc.Score;
+            }
+
             _MatchPages++;
         }
     }
