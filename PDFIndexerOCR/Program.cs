@@ -176,8 +176,20 @@ namespace PDFIndexerOCR
                             }
                             catch (Exception e)
                             {
-                                // TODO: 클라이언트에 에러 전송
+                                try
+                                {
+                                    // 클라이언트에 에러 전송
+                                    var response = new OCRPipeResponse(null)
+                                    {
+                                        status = 500,
+                                    };
+                                    var json = PipeResponse.ToJSON(response);
 
+                                    writer.WriteLine(json);
+                                }
+                                catch { }
+
+                                Console.Error.WriteLine($"[OCR] Failed to OCR:");
                                 Console.Error.WriteLine(e.ToString());
                             }
                         }
