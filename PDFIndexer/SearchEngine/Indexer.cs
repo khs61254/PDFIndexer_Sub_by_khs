@@ -65,6 +65,7 @@ namespace PDFIndexer.SearchEngine
                             new Int32Field("page", page.Number, Field.Store.YES),
                             new StringField("md5", hash, Field.Store.YES),
                             new StringField("lastModified", lastModified.ToString(), Field.Store.YES),
+                            new StringField("isOCRData", "0", Field.Store.YES),
                         };
 
                         // 페이지 내용 (텍스트만)

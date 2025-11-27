@@ -158,8 +158,10 @@ namespace PDFIndexer.BackgroundTask
                                 }
 
                                 // 인덱스 저장
+                                var filename = (task.Path.Split('\\').LastOrDefault() ?? task.Path).Replace(".pdf", "");
                                 Document doc = new Document
                                 {
+                                    new StringField("title", filename, Field.Store.YES),
                                     new StringField("path", task.Path, Field.Store.YES),
                                     new Int32Field("page", task.Page, Field.Store.YES),
                                     new TextField("content", result, Field.Store.YES),
