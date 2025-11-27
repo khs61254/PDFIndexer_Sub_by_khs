@@ -281,5 +281,38 @@ namespace PDFIndexer
         {
             duplicateManagerView.ShowDialog();
         }
+
+        private void Form1_Resize(object sender, EventArgs e)
+        {
+            if (WindowState == FormWindowState.Minimized)
+            {
+                Hide();
+            }
+        }
+
+        private void ShowMainUIFromMinimize()
+        {
+            if (!Visible)
+            {
+                Show();
+                WindowState = FormWindowState.Normal;
+                Activate();
+            }
+        }
+
+        private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            ShowMainUIFromMinimize();
+        }
+
+        private void ShowMainUIToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowMainUIFromMinimize();
+        }
+
+        private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
     }
 }

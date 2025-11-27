@@ -58,5 +58,17 @@ namespace PDFIndexer.Properties {
                 this["DoneFirstIndex"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool HideWhenClose {
+            get {
+                return ((bool)(this["HideWhenClose"]));
+            }
+            set {
+                this["HideWhenClose"] = value;
+            }
+        }
     }
 }
