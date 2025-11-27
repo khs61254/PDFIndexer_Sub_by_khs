@@ -53,7 +53,7 @@ namespace PDFIndexer.BackgroundTask
             if (OCRProcess != null) return;
             //if (!OCRProcess.HasExited) return;
 
-            var startInfo = new ProcessStartInfo()
+            var ocrProcessStartInfo = new ProcessStartInfo()
             {
                 FileName = "PDFIndexerOCR",
                 UseShellExecute = false,
@@ -65,7 +65,7 @@ namespace PDFIndexer.BackgroundTask
 #endif
             };
 
-            OCRProcess = Process.Start(startInfo);
+            OCRProcess = Process.Start(ocrProcessStartInfo);
 
             // 기존 스레드 정지
             if (IPCThread != null)
@@ -145,6 +145,10 @@ namespace PDFIndexer.BackgroundTask
                                     if (data != null)
                                     {
                                         OCRPipeResponse response = PipeResponse.FromJSON<OCRPipeResponse>(data);
+                                        if (response.status != 200)
+                                        {
+                                            throw new InvalidDataException("OCR error");
+                                        }
 
                                         result += response.Text + "\n";
                                     }
@@ -157,12 +161,12 @@ namespace PDFIndexer.BackgroundTask
 
                                 // 인덱스 저장
                                 Document doc = new Document
-                            {
-                                new StringField("path", task.Path, Field.Store.YES),
-                                new Int32Field("page", task.Page, Field.Store.YES),
-                                new TextField("content", result, Field.Store.YES),
-                                new StringField("isOCRData", "1", Field.Store.YES),
-                            };
+                                {
+                                    new StringField("path", task.Path, Field.Store.YES),
+                                    new Int32Field("page", task.Page, Field.Store.YES),
+                                    new TextField("content", result, Field.Store.YES),
+                                    new StringField("isOCRData", "1", Field.Store.YES),
+                                };
 
                                 var indexWriter = SearchEngineContext.Provider.GetIndexWriter();
                                 indexWriter.AddDocument(doc);
@@ -176,7 +180,7 @@ namespace PDFIndexer.BackgroundTask
 
                             Logger.Write($"[OCRTask-IPC] {task.Path}/{task.Page} Done");
 
-                            Thread.Sleep(3000);
+                            Thread.Sleep(500);
 
                             // 완료 표시
                             task.Done = true;
@@ -188,7 +192,7 @@ namespace PDFIndexer.BackgroundTask
                         // Pipe broken or pipe closed
                         if (e is ObjectDisposedException || e is IOException)
                         {
-                            Logger.Write("[OCRTask-IPC] Pipe closed or broken");
+                            Logger.Write(JournalLevel.Error, "[OCRTask-IPC] Pipe closed or broken");
 
                             if (task != null && !task.Done && !task.FailedOnce)
                             {
@@ -204,7 +208,15 @@ namespace PDFIndexer.BackgroundTask
                         else if (e is TimeoutException)
                         {
                             // Pipe connect timed out
-                            Logger.Write("[OCRTask-IPC] Pipe connect timeout");
+                            Logger.Write(JournalLevel.Error, "[OCRTask-IPC] Pipe connect timeout");
+
+                            // 연결 타임아웃의 경우 대부분 프로세스가 죽었을 경우임
+                            // OCR 프로세스가 갑자기 메모리 사용량이 치솟고, OOM Kill 당하는 버그가 있음.
+                            // 일단 타임아웃이 되면, 프로세스 다시시작
+                            if (OCRProcess != null && !OCRProcess.HasExited) OCRProcess.Kill();
+                            OCRProcess = Process.Start(ocrProcessStartInfo);
+                            // 프로세스 시작 대기
+                            Thread.Sleep(1000);
 
                             if (task != null && !task.Done)
                             {
@@ -214,12 +226,29 @@ namespace PDFIndexer.BackgroundTask
                                 Logger.Write($"[OCRTask-IPC] Re-enqueued task {task.Path}/{task.Page}");
                             }
                         }
+                        else if (e is InvalidDataException)
+                        {
+                            Logger.Write(JournalLevel.Error, "[OCRTask-IPC] OCR error");
+
+                            if (task != null && !task.Done && !task.FailedOnce)
+                            {
+                                task.FailedOnce = true;
+
+                                // Re-enqueue task
+                                InternalQueue.Enqueue(task);
+
+                                Logger.Write($"[OCRTask-IPC] Re-enqueued task {task.Path}/{task.Page}");
+                            }
+                        }
                         else
                         {
-                            Logger.Write(e.ToString());
-
-
+                            // 기타 에러
+                            Logger.Write(JournalLevel.Error, "[OCRTask-IPC] Error on IPC thread:");
+                            Logger.Write(JournalLevel.Error, e.ToString());
                         }
+
+                        // 에러 패널티
+                        Thread.Sleep(10000);
                     } finally
                     {
                         if (Client.IsConnected)
