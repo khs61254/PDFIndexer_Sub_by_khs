@@ -20,6 +20,8 @@ namespace PDFIndexerOCR
 
         private static Paddle OCRProvider;
 
+        private static Thread PipeServerThread;
+
         static void Main(string[] args)
         {
             Console.WriteLine("PDFIndexerOCR\n");
@@ -31,7 +33,9 @@ namespace PDFIndexerOCR
             if (!SingleMode)
             {
                 MainProcessWatcher();
-                StartPipeServer();
+
+                PipeServerThread = new Thread(StartPipeServer);
+                PipeServerThread.Start();
             } else
             {
                 OCRSingle();
@@ -86,83 +90,100 @@ namespace PDFIndexerOCR
 
         private static void StartPipeServer()
         {
-            using (var server = new NamedPipeServerStream("PDFIndexerOCR", PipeDirection.InOut))
+            for (; ; )
             {
-                server.WaitForConnection();
-
-                using (var reader = new StreamReader(server))
-                using (var writer = new StreamWriter(server) { AutoFlush = true })
+                using (var server = new NamedPipeServerStream("PDFIndexerOCR", PipeDirection.InOut))
                 {
-                    while (server.IsConnected)
+                    Console.WriteLine("[Server] 클라이언트 연결 대기중");
+
+                    server.WaitForConnection();
+
+                    Console.WriteLine("[Server] Client Connected");
+
+                    using (var reader = new StreamReader(server))
+                    using (var writer = new StreamWriter(server) { AutoFlush = true })
                     {
-                        try
+                        while (server.IsConnected)
                         {
-                            /**
-                             * 전송 데이터
-                             * | 헤더 (4 bytes int) | body (n bytes)        |
-                             * | ----------------- | --------------------- |
-                             * | 데이터 길이         | 실 이미지 데이터 n bytes |
-                             */
-
-                            // 헤더 읽기
-                            byte[] lengthBuffer = new byte[4];
-                            int bytesRead = server.Read(lengthBuffer, 0, 4);
-
-                            // 잘못된 입력 --> 연결 종료
-                            if (bytesRead == 0) break;
-
-                            int dataLength = BitConverter.ToInt32(lengthBuffer, 0);
-
-                            // 바디 읽기
-                            byte[] imageBuffer = new byte[dataLength];
-                            int totalRead = 0;
-
-                            // 모두 읽기
-                            while (totalRead < dataLength)
+                            try
                             {
-                                int read = server.Read(imageBuffer, totalRead, dataLength - totalRead);
+                                /**
+                                  * 전송 데이터
+                                  * | 헤더 (4 bytes int) | body (n bytes)        |
+                                  * | ----------------- | --------------------- |
+                                  * | 데이터 길이         | 실 이미지 데이터 n bytes |
+                                  */
 
-                                // 읽은 바이트 수가 0이면 종료
-                                // 다 읽었거나, 들어온 데이터가 없거나 아님 클라이언트가 보내지 않았던가 --> 잘못된 입력
-                                if (read == 0) break;
+                                // 헤더 읽기
+                                byte[] lengthBuffer = new byte[4];
+                                int bytesRead = server.Read(lengthBuffer, 0, 4);
 
-                                totalRead += read;
-                            }
+                                // 잘못된 입력 --> 연결 종료
+                                if (bytesRead == 0) break;
 
-                            Console.WriteLine($"{totalRead} bytes received. Start OCR");
+                                int dataLength = BitConverter.ToInt32(lengthBuffer, 0);
 
-                            List<OCRRegion> regions = new List<OCRRegion>();
+                                // 바디 읽기
+                                byte[] imageBuffer = new byte[dataLength];
+                                int totalRead = 0;
 
-                            PaddleOcrResult result = OCRProvider.OCR(imageBuffer);
-                            foreach (PaddleOcrResultRegion region in result.Regions)
-                            {
-                                regions.Add(new OCRRegion()
+                                // 모두 읽기
+                                while (totalRead < dataLength)
                                 {
-                                    Text = region.Text,
-                                    Score = region.Score,
+                                    int read = server.Read(imageBuffer, totalRead, dataLength - totalRead);
 
-                                    CenterX = (int)region.Rect.Center.X,
-                                    CenterY = (int)region.Rect.Center.Y,
-                                    Width = (int)region.Rect.Size.Width,
-                                    Height = (int)region.Rect.Size.Height,
-                                    Angle = region.Rect.Angle,
-                                });
+                                    // 읽은 바이트 수가 0이면 종료
+                                    // 다 읽었거나, 들어온 데이터가 없거나 아님 클라이언트가 보내지 않았던가 --> 잘못된 입력
+                                    if (read == 0) break;
+
+                                    totalRead += read;
+                                }
+
+                                Console.WriteLine($"[OCR] -------------------------------------------");
+                                Console.WriteLine($"[OCR] Start OCR. Received {totalRead} bytes.");
+
+                                var stopwatch = new Stopwatch();
+                                stopwatch.Start();
+
+                                List<OCRRegion> regions = new List<OCRRegion>();
+
+                                PaddleOcrResult result = OCRProvider.OCR(imageBuffer);
+                                foreach (PaddleOcrResultRegion region in result.Regions)
+                                {
+                                    regions.Add(new OCRRegion()
+                                    {
+                                        Text = region.Text,
+                                        Score = region.Score,
+
+                                        CenterX = (int)region.Rect.Center.X,
+                                        CenterY = (int)region.Rect.Center.Y,
+                                        Width = (int)region.Rect.Size.Width,
+                                        Height = (int)region.Rect.Size.Height,
+                                        Angle = region.Rect.Angle,
+                                    });
+                                }
+
+                                var res = new OCRPipeResponse(result.Text, regions.ToArray());
+                                var response = PipeResponse.ToJSON(res);
+
+                                stopwatch.Stop();
+                                Console.WriteLine($"[OCR] Result: {result.Text.Substring(0, 20).Replace("\n", " ")}{(result.Text.Length > 20 ? "..." : "")} (length: {result.Text.Length})");
+                                Console.WriteLine($"[OCR] Elapsed: {stopwatch.Elapsed}");
+
+                                writer.WriteLine(response);
+
+                                Console.WriteLine($"[OCR] -------------------------------------------");
                             }
+                            catch (Exception e)
+                            {
+                                // TODO: 클라이언트에 에러 전송
 
-                            Console.WriteLine($"OCR Done: {result.Text}");
-
-                            var res = new OCRPipeResponse(result.Text, regions.ToArray());
-                            var response = PipeResponse.ToJSON(res);
-                            Console.WriteLine(response);
-                            writer.WriteLine(response);
-                        }
-                        catch (Exception e)
-                        {
-                            // TODO: 클라이언트에 에러 전송
-
-                            Console.Error.WriteLine(e.ToString());
+                                Console.Error.WriteLine(e.ToString());
+                            }
                         }
                     }
+
+                    Debug.WriteLine("[Server] Client Disconnected");
                 }
             }
         }
@@ -177,6 +198,9 @@ namespace PDFIndexerOCR
                     {
                         // Kill
                         Console.WriteLine("No main process detected. Exit");
+
+                        PipeServerThread?.Abort();
+
                         Environment.Exit(0);
                     }
 
