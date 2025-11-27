@@ -25,6 +25,8 @@ namespace PDFIndexer.BackgroundTask
     {
         private static readonly Properties.Settings AppSettings = Properties.Settings.Default;
 
+        private static bool StopSignalReceived = false;
+
         private static Process OCRProcess;
         private static Thread IPCThread;
         private static StreamReader Reader;
@@ -35,6 +37,7 @@ namespace PDFIndexer.BackgroundTask
         private int Page;
         private Queue<byte[]> Images;
         private bool Done = false;
+        private bool FailedOnce = false;
 
         public OCRTask(string path, int page)
         {
@@ -76,77 +79,84 @@ namespace PDFIndexer.BackgroundTask
 
             IPCThread = new Thread(() =>
             {
-                using (var Client = new NamedPipeClientStream(".", "PDFIndexerOCR", PipeDirection.InOut))
+                while (!StopSignalReceived)
                 {
-                    Client.Connect(5000);
+                    OCRTask task = null;
+                    var Client = new NamedPipeClientStream(".", "PDFIndexerOCR", PipeDirection.InOut);
 
-                    Reader = new StreamReader(Client);
-                    Writer = new StreamWriter(Client);
-
-                    while (Client.IsConnected)
+                    try
                     {
-                        OCRTask task;
-                        try
+                        Client.Connect(5000);
+
+                        Reader = new StreamReader(Client);
+                        Writer = new StreamWriter(Client);
+
+                        while (Client.IsConnected && !StopSignalReceived)
                         {
-                            task = InternalQueue.Dequeue();
-                        } catch (InvalidOperationException)
-                        {
-                            // 큐 Empty 패널티 부여
-                            // 큐가 비었다면 다음에도 비어있을 가능성이 높음.
-                            //Thread.Sleep(30 * 1000);
-                            Thread.Sleep(1000);
-
-                            continue;
-                        }
-
-                        Logger.Write($"[OCRTask-IPC] {task.Path}/{task.Page} Start");
-
-                        var dbCollection = DBContext.DB.GetCollection<IndexedDocument>("indexed");
-                        var dbItem = dbCollection.FindOne(Query.And(Query.EQ("Path", task.Path), Query.EQ("Page", task.Page)));
-                        if (dbItem == null)
-                        {
-                            task.Done = true;
-                            continue;
-                        }
-
-                        // 이미지가 없으면 스킵
-                        if (task.Images != null && task.Images.Count > 0)
-                        {
-                            string result = "";
-
-                            foreach (var image in task.Images)
+                            try
                             {
-                                if (image == null) continue;
+                                task = InternalQueue.Dequeue();
+                            }
+                            catch (InvalidOperationException)
+                            {
+                                task = null;
 
-                                /**
-                                  * 전송 데이터
-                                  * | 헤더 (4 bytes int) | body (n bytes)        |
-                                  * | ----------------- | --------------------- |
-                                  * | 데이터 길이         | 실 이미지 데이터 n bytes |
-                                  */
-                                byte[] header = BitConverter.GetBytes(image.Length);
-                                Client.Write(header, 0, header.Length);
-                                Client.Write(image, 0, image.Length);
-                                Client.Flush();
+                                // 큐 Empty 패널티 부여
+                                // 큐가 비었다면 다음에도 비어있을 가능성이 높음.
+                                //Thread.Sleep(30 * 1000);
+                                Thread.Sleep(1000);
 
-                                // TODO: 파이프 끊어짐 처리
+                                continue;
+                            }
 
-                                string data = Reader.ReadLine();
-                                if (data != null)
+                            Logger.Write($"[OCRTask-IPC] {task.Path}/{task.Page} Start");
+
+                            var dbCollection = DBContext.DB.GetCollection<IndexedDocument>("indexed");
+                            var dbItem = dbCollection.FindOne(Query.And(Query.EQ("Path", task.Path), Query.EQ("Page", task.Page)));
+                            if (dbItem == null)
+                            {
+                                task.Done = true;
+                                continue;
+                            }
+
+                            // 이미지가 없으면 스킵
+                            if (task.Images != null && task.Images.Count > 0)
+                            {
+                                string result = "";
+
+                                foreach (var image in task.Images)
                                 {
-                                    OCRPipeResponse response = PipeResponse.FromJSON<OCRPipeResponse>(data);
+                                    if (image == null) continue;
 
-                                    result += response.Text + "\n";
+                                    /**
+                                        * 전송 데이터
+                                        * | 헤더 (4 bytes int) | body (n bytes)        |
+                                        * | ----------------- | --------------------- |
+                                        * | 데이터 길이         | 실 이미지 데이터 n bytes |
+                                        */
+                                    byte[] header = BitConverter.GetBytes(image.Length);
+                                    Client.Write(header, 0, header.Length);
+                                    Client.Write(image, 0, image.Length);
+                                    Client.Flush();
+
+                                    // TODO: 파이프 끊어짐 처리
+
+                                    string data = Reader.ReadLine();
+                                    if (data != null)
+                                    {
+                                        OCRPipeResponse response = PipeResponse.FromJSON<OCRPipeResponse>(data);
+
+                                        result += response.Text + "\n";
+                                    }
                                 }
-                            }
 
-                            if (result.Length > 0)
-                            {
-                                Logger.Write($"[OCRTask-IPC] OCR Done {task.Path}/{task.Page} : Length {result.Length}");
-                            }
+                                if (result.Length > 0)
+                                {
+                                    Logger.Write($"[OCRTask-IPC] OCR Done {task.Path}/{task.Page} : Length {result.Length}");
+                                }
 
-                            // 인덱스 저장
-                            Document doc = new Document
+                                // 인덱스 저장
+                                Document doc = new Document
                             {
                                 new StringField("path", task.Path, Field.Store.YES),
                                 new Int32Field("page", task.Page, Field.Store.YES),
@@ -154,22 +164,69 @@ namespace PDFIndexer.BackgroundTask
                                 new StringField("isOCRData", "1", Field.Store.YES),
                             };
 
-                            var indexWriter = SearchEngineContext.Provider.GetIndexWriter();
-                            indexWriter.AddDocument(doc);
-                            indexWriter.Commit();
-                            SearchEngineContext.Provider.MarkAsDirty();
+                                var indexWriter = SearchEngineContext.Provider.GetIndexWriter();
+                                indexWriter.AddDocument(doc);
+                                indexWriter.Commit();
+                                SearchEngineContext.Provider.MarkAsDirty();
+                            }
+
+                            // DB 업데이트
+                            dbItem.OCRDone = true;
+                            dbCollection.Update(dbItem);
+
+                            Logger.Write($"[OCRTask-IPC] {task.Path}/{task.Page} Done");
+
+                            Thread.Sleep(3000);
+
+                            // 완료 표시
+                            task.Done = true;
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        // https://learn.microsoft.com/en-us/dotnet/api/system.io.pipes.pipestream.write?view=netframework-4.7.2
+                        // Pipe broken or pipe closed
+                        if (e is ObjectDisposedException || e is IOException)
+                        {
+                            Logger.Write("[OCRTask-IPC] Pipe closed or broken");
 
-                        // DB 업데이트
-                        dbItem.OCRDone = true;
-                        dbCollection.Update(dbItem);
+                            if (task != null && !task.Done && !task.FailedOnce)
+                            {
+                                // Mask as failed once
+                                task.FailedOnce = true;
 
-                        Logger.Write($"[OCRTask-IPC] {task.Path}/{task.Page} Done");
+                                // Re-enqueue task
+                                InternalQueue.Enqueue(task);
 
-                        Thread.Sleep(3000);
+                                Logger.Write($"[OCRTask-IPC] Re-enqueued task {task.Path}/{task.Page}");
+                            }
+                        }
+                        else if (e is TimeoutException)
+                        {
+                            // Pipe connect timed out
+                            Logger.Write("[OCRTask-IPC] Pipe connect timeout");
 
-                        // 완료 표시
-                        task.Done = true;
+                            if (task != null && !task.Done)
+                            {
+                                // Re-enqueue task
+                                InternalQueue.Enqueue(task);
+
+                                Logger.Write($"[OCRTask-IPC] Re-enqueued task {task.Path}/{task.Page}");
+                            }
+                        }
+                        else
+                        {
+                            Logger.Write(e.ToString());
+
+
+                        }
+                    } finally
+                    {
+                        if (Client.IsConnected)
+                        {
+                            Client.Close();
+                            Client.Dispose();
+                        }
                     }
                 }
             });
@@ -182,6 +239,8 @@ namespace PDFIndexer.BackgroundTask
         {
             try
             {
+                StopSignalReceived = true;
+
                 if (IPCThread != null) IPCThread.Abort();
 
                 if (OCRProcess != null && !OCRProcess.HasExited) OCRProcess.Kill();
