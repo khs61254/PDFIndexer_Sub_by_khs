@@ -27,16 +27,17 @@ using static Lucene.Net.Util.Packed.PackedInt32s;
 using Directory = System.IO.Directory;
 using PDFIndexer.SearchEngine;
 using PDFIndexer.Services;
+using PDFIndexer.SettingsView;
 
 namespace PDFIndexer
 {
     public partial class Form1 : Form
     {
-        private static readonly Properties.Settings AppSettiongs = Properties.Settings.Default;
+        private static readonly Properties.Settings AppSettings = Properties.Settings.Default;
 
         private string basePath
         {
-            get { return AppSettiongs.BasePath; }
+            get { return AppSettings.BasePath; }
         }
 
         private readonly List<string> pdfs = new List<string>();
@@ -76,6 +77,9 @@ namespace PDFIndexer
         }
 
         DuplicateManagerView duplicateManagerView;
+
+        // true로 설정 시 CloseToTray 설정을 무시하고 창을 닫을 수 있도록 함.
+        private bool forceQuit = false;
 
         public Form1(LuceneProvider provider)
         {
@@ -289,7 +293,7 @@ namespace PDFIndexer
 
         private void Form1_Resize(object sender, EventArgs e)
         {
-            if (WindowState == FormWindowState.Minimized)
+            if (WindowState == FormWindowState.Minimized && AppSettings.MinimizeToTray)
             {
                 Hide();
             }
@@ -312,6 +316,9 @@ namespace PDFIndexer
                 Show();
                 WindowState = FormWindowState.Normal;
                 Activate();
+            } else
+            {
+                Activate();
             }
         }
 
@@ -327,7 +334,31 @@ namespace PDFIndexer
 
         private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            forceQuit = true;
             Close();
+        }
+
+        private void SettingsButton_Click(object sender, EventArgs e)
+        {
+            new SettingsForm().ShowDialog();
+        }
+
+        private void notifyIcon1_Click(object sender, EventArgs e)
+        {
+            if ((e as MouseEventArgs).Button == MouseButtons.Left)
+            {
+                ShowMainUIFromMinimize();
+            }
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (!forceQuit && AppSettings.CloseToTray)
+            {
+                e.Cancel = true;
+                WindowState = FormWindowState.Minimized;
+                Hide();
+            }
         }
     }
 }

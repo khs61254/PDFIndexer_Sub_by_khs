@@ -47,18 +47,18 @@
             this.DetachButton = new System.Windows.Forms.Button();
             this.OpenInNewWindowButton = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.WebViewVirtualPanel = new System.Windows.Forms.Panel();
+            this.noFileLabel = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.panel1 = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.flowLayoutPanel3 = new System.Windows.Forms.FlowLayoutPanel();
-            this.button4 = new System.Windows.Forms.Button();
+            this.SettingsButton = new System.Windows.Forms.Button();
             this.IndexAllButton = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.DuplicateMangerButton = new PDFIndexer.IconTextButtonControl();
-            this.label2 = new System.Windows.Forms.Label();
-            this.WebViewVirtualPanel = new System.Windows.Forms.Panel();
-            this.noFileLabel = new System.Windows.Forms.Label();
             this.contextMenuStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
@@ -67,10 +67,10 @@
             this.tableLayoutPanel5.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
             this.panel2.SuspendLayout();
+            this.WebViewVirtualPanel.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             this.panel1.SuspendLayout();
             this.flowLayoutPanel3.SuspendLayout();
-            this.WebViewVirtualPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // notifyIcon1
@@ -79,6 +79,7 @@
             this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
             this.notifyIcon1.Text = "PDFIndexer";
             this.notifyIcon1.Visible = true;
+            this.notifyIcon1.Click += new System.EventHandler(this.notifyIcon1_Click);
             this.notifyIcon1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.notifyIcon1_MouseDoubleClick);
             // 
             // contextMenuStrip1
@@ -266,6 +267,38 @@
             this.panel2.Size = new System.Drawing.Size(864, 615);
             this.panel2.TabIndex = 18;
             // 
+            // WebViewVirtualPanel
+            // 
+            this.WebViewVirtualPanel.BackColor = System.Drawing.Color.Transparent;
+            this.WebViewVirtualPanel.Controls.Add(this.noFileLabel);
+            this.WebViewVirtualPanel.Controls.Add(this.label2);
+            this.WebViewVirtualPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.WebViewVirtualPanel.Location = new System.Drawing.Point(0, 0);
+            this.WebViewVirtualPanel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.WebViewVirtualPanel.Name = "WebViewVirtualPanel";
+            this.WebViewVirtualPanel.Size = new System.Drawing.Size(864, 615);
+            this.WebViewVirtualPanel.TabIndex = 26;
+            // 
+            // noFileLabel
+            // 
+            this.noFileLabel.AutoSize = true;
+            this.noFileLabel.Location = new System.Drawing.Point(365, 300);
+            this.noFileLabel.Name = "noFileLabel";
+            this.noFileLabel.Size = new System.Drawing.Size(135, 15);
+            this.noFileLabel.TabIndex = 25;
+            this.noFileLabel.Text = "선택된 파일이 없습니다";
+            this.noFileLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(13, 15);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(207, 30);
+            this.label2.TabIndex = 0;
+            this.label2.Text = "WebView Proxy\r\n이 부분에 PdfWebView가 표시됩니다";
+            this.label2.Visible = false;
+            // 
             // tableLayoutPanel2
             // 
             this.tableLayoutPanel2.ColumnCount = 2;
@@ -313,7 +346,7 @@
             this.flowLayoutPanel3.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.flowLayoutPanel3.Controls.Add(this.button4);
+            this.flowLayoutPanel3.Controls.Add(this.SettingsButton);
             this.flowLayoutPanel3.Controls.Add(this.IndexAllButton);
             this.flowLayoutPanel3.Controls.Add(this.button2);
             this.flowLayoutPanel3.Controls.Add(this.DuplicateMangerButton);
@@ -323,15 +356,16 @@
             this.flowLayoutPanel3.Size = new System.Drawing.Size(873, 36);
             this.flowLayoutPanel3.TabIndex = 26;
             // 
-            // button4
+            // SettingsButton
             // 
-            this.button4.Image = global::PDFIndexer.Properties.Resources.SettingsIcon;
-            this.button4.Location = new System.Drawing.Point(840, 4);
-            this.button4.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(30, 30);
-            this.button4.TabIndex = 21;
-            this.button4.UseVisualStyleBackColor = true;
+            this.SettingsButton.Image = global::PDFIndexer.Properties.Resources.SettingsIcon;
+            this.SettingsButton.Location = new System.Drawing.Point(840, 4);
+            this.SettingsButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.SettingsButton.Name = "SettingsButton";
+            this.SettingsButton.Size = new System.Drawing.Size(30, 30);
+            this.SettingsButton.TabIndex = 21;
+            this.SettingsButton.UseVisualStyleBackColor = true;
+            this.SettingsButton.Click += new System.EventHandler(this.SettingsButton_Click);
             // 
             // IndexAllButton
             // 
@@ -369,38 +403,6 @@
             this.DuplicateMangerButton.TabIndex = 24;
             this.DuplicateMangerButton.UseVisualStyleBackColor = true;
             // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(13, 15);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(207, 30);
-            this.label2.TabIndex = 0;
-            this.label2.Text = "WebView Proxy\r\n이 부분에 PdfWebView가 표시됩니다";
-            this.label2.Visible = false;
-            // 
-            // WebViewVirtualPanel
-            // 
-            this.WebViewVirtualPanel.BackColor = System.Drawing.Color.Transparent;
-            this.WebViewVirtualPanel.Controls.Add(this.noFileLabel);
-            this.WebViewVirtualPanel.Controls.Add(this.label2);
-            this.WebViewVirtualPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.WebViewVirtualPanel.Location = new System.Drawing.Point(0, 0);
-            this.WebViewVirtualPanel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.WebViewVirtualPanel.Name = "WebViewVirtualPanel";
-            this.WebViewVirtualPanel.Size = new System.Drawing.Size(864, 615);
-            this.WebViewVirtualPanel.TabIndex = 26;
-            // 
-            // noFileLabel
-            // 
-            this.noFileLabel.AutoSize = true;
-            this.noFileLabel.Location = new System.Drawing.Point(365, 300);
-            this.noFileLabel.Name = "noFileLabel";
-            this.noFileLabel.Size = new System.Drawing.Size(135, 15);
-            this.noFileLabel.TabIndex = 25;
-            this.noFileLabel.Text = "선택된 파일이 없습니다";
-            this.noFileLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
             // Form1
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
@@ -411,6 +413,7 @@
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "Form1";
             this.Text = "PDFIndexer";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.Resize += new System.EventHandler(this.Form1_Resize);
             this.contextMenuStrip1.ResumeLayout(false);
@@ -424,11 +427,11 @@
             this.tableLayoutPanel5.PerformLayout();
             this.flowLayoutPanel2.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
+            this.WebViewVirtualPanel.ResumeLayout(false);
+            this.WebViewVirtualPanel.PerformLayout();
             this.tableLayoutPanel2.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.flowLayoutPanel3.ResumeLayout(false);
-            this.WebViewVirtualPanel.ResumeLayout(false);
-            this.WebViewVirtualPanel.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -456,7 +459,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel3;
-        private System.Windows.Forms.Button button4;
+        private System.Windows.Forms.Button SettingsButton;
         private System.Windows.Forms.Button IndexAllButton;
         private System.Windows.Forms.Button button2;
         private IconTextButtonControl DuplicateMangerButton;
