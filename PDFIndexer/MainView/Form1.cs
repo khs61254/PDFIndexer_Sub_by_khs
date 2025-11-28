@@ -89,6 +89,11 @@ namespace PDFIndexer
 
             InitializeComponent();
 
+            noFileLabel.Location = new Point(
+                (WebViewVirtualPanel.ClientSize.Width / 2) - (noFileLabel.ClientSize.Width / 2),
+                (WebViewVirtualPanel.ClientSize.Height / 2) - (noFileLabel.ClientSize.Height / 2)
+            );
+
             //BackColor = Color.White;
             //TransparencyKey = Color.White;
 
@@ -106,10 +111,10 @@ namespace PDFIndexer
         {
             pdfWebView.TopLevel = false;
             pdfWebView.FormBorderStyle = FormBorderStyle.None;
-            pdfWebView.Location = WebViewVirtualPanel.Location;
+            pdfWebView.Location = new Point(0, 0);
             pdfWebView.Size = WebViewVirtualPanel.ClientSize;
 
-            Controls.Add(pdfWebView);
+            WebViewVirtualPanel.Controls.Add(pdfWebView);
             if (!pdfWebView.Visible) pdfWebView.Show();
 
             WebViewIsDetached = false;
@@ -288,6 +293,16 @@ namespace PDFIndexer
             {
                 Hide();
             }
+
+            if (!WebViewIsDetached)
+            {
+                pdfWebView.Size = WebViewVirtualPanel.ClientSize;
+            }
+
+            noFileLabel.Location = new Point(
+                (WebViewVirtualPanel.ClientSize.Width / 2) - (noFileLabel.ClientSize.Width / 2),
+                (WebViewVirtualPanel.ClientSize.Height / 2) - (noFileLabel.ClientSize.Height / 2)
+            );
         }
 
         private void ShowMainUIFromMinimize()
