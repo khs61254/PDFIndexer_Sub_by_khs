@@ -49,7 +49,8 @@ namespace PDFIndexerOCR
             for (int i = 0; i < args.Length; i++)
             {
                 var arg = args[i];
-                var nextArg = args[i + 1];
+                string nextArg = null;
+                if (args.Length > i + 1) nextArg = args[i + 1];
 
                 switch (arg)
                 {
