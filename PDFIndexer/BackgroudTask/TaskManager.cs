@@ -70,15 +70,17 @@ namespace PDFIndexer.BackgroundTask
             }
         }
 
-        public static void Enqueue(AbstractTask task)
+        public static bool Enqueue(AbstractTask task)
         {
             var hash = new KeyValuePair<string, string>(task.ToString(), task.GetTaskHash());
-            if (TaskHashes.Contains(hash)) return;
+            if (TaskHashes.Contains(hash)) return false;
 
             Tasks.Enqueue(task);
             TaskHashes.Add(hash);
 
             // Logger.Write($"[TaskManager] Task enqueue: {hash.Key}/{hash.Value}");
+
+            return true;
         }
 
         public static bool IsExists(string type, string taskHash)
