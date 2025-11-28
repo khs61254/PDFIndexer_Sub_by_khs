@@ -11,6 +11,7 @@ namespace PDFIndexer.BackgroundTask
     internal class TaskManager
     {
         private static Queue<AbstractTask> Tasks;
+        private static Queue<AbstractTask> PriorityTasks;
         private static HashSet<KeyValuePair<string, string>> TaskHashes;
 
         private Thread TaskThread;
@@ -27,6 +28,7 @@ namespace PDFIndexer.BackgroundTask
         public TaskManager()
         {
             Tasks = new Queue<AbstractTask>();
+            PriorityTasks = new Queue<AbstractTask>();
             TaskHashes = new HashSet<KeyValuePair<string, string>>();
             TaskThread = new Thread(TaskRunner);
         }
@@ -49,13 +51,22 @@ namespace PDFIndexer.BackgroundTask
             while (!NeedToStop)
             {
                 // Empty task queue panelty
-                if (Tasks.Count == 0)
+                if (Tasks.Count == 0 && PriorityTasks.Count == 0)
                 {
                     Thread.Sleep(EmptyTaskPenalty);
                     continue;
                 }
 
-                var task = Tasks.Dequeue();
+                AbstractTask task;
+
+                if (PriorityTasks.Count > 0)
+                {
+                    task = PriorityTasks.Dequeue();
+                } else
+                {
+                    task = Tasks.Dequeue();
+                }
+
                 var hash = new KeyValuePair<string, string>(task.ToString(), task.GetTaskHash());
 
                 // 작업 실행
@@ -70,12 +81,13 @@ namespace PDFIndexer.BackgroundTask
             }
         }
 
-        public static bool Enqueue(AbstractTask task)
+        public static bool Enqueue(AbstractTask task, bool priority = false)
         {
             var hash = new KeyValuePair<string, string>(task.ToString(), task.GetTaskHash());
             if (TaskHashes.Contains(hash)) return false;
 
-            Tasks.Enqueue(task);
+            if (priority) PriorityTasks.Enqueue(task);
+            else Tasks.Enqueue(task);
             TaskHashes.Add(hash);
 
             // Logger.Write($"[TaskManager] Task enqueue: {hash.Key}/{hash.Value}");

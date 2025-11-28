@@ -70,7 +70,7 @@ namespace PDFIndexer
         private void EnqueueTask(string path)
         {
             var task = new IndexTask(path);
-            TaskManager.Enqueue(task);
+            TaskManager.Enqueue(task, true);
         }
     }
 }
