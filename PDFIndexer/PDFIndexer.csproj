@@ -53,6 +53,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BackgroudTask\RemoveIndexTask.cs" />
+    <Compile Include="DuplicateManager\DuplicateItem.cs" />
+    <Compile Include="DuplicateManager\DuplicateItemListControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Services\DBContext.cs" />
     <Compile Include="Journal\View\DebugForm.cs">
       <SubType>Form</SubType>

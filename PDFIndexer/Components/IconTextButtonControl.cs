@@ -146,8 +146,7 @@ namespace PDFIndexer
             control.MouseEnter += (_, e) => base.OnMouseEnter(e);
             control.MouseLeave += (_, e) => base.OnMouseLeave(e);
             control.MouseMove += (_, e) => base.OnMouseMove(e);
-            control.MouseClick += (s, e) => base.OnMouseClick(e);
-            control.MouseDoubleClick += (s, e) => base.OnMouseDoubleClick(e);
+            control.Click += (_, e) => base.OnClick(e);
             control.MouseDown += (s, e) => base.OnMouseDown(e);
             control.MouseUp += (s, e) => base.OnMouseUp(e);
             control.GotFocus += (s, e) => base.OnGotFocus(e);
