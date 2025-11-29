@@ -74,7 +74,7 @@ namespace PDFIndexerOCR
                         switch (nextArg.ToLower())
                         {
                             case "high":
-                                priority = ProcessPriorityClass.AboveNormal;
+                                priority = ProcessPriorityClass.High;
                                 break;
                             case "normal":
                                 priority = ProcessPriorityClass.Normal;
