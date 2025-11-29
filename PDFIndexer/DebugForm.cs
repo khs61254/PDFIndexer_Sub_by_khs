@@ -87,5 +87,11 @@ namespace PDFIndexer
             // 이벤트 리스닝
             Logger.OnMessage += Logger_OnMessage;
         }
+
+        private void ResetHintButton_Click(object sender, EventArgs e)
+        {
+            AppSettings.HintTrayIcon = false;
+            AppSettings.Save();
+        }
     }
 }
