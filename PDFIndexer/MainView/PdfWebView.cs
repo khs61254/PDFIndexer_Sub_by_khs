@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,7 +27,14 @@ namespace PDFIndexer
         // 무조건 이 메소드를 이용해서 열어야 함.
         internal void OpenPDFInApp(string path, int page)
         {
-            currentPdf = new Uri($"file://{path}#page={page}");
+            var splitted = path.Split(Path.DirectorySeparatorChar);
+            var url = "";
+            foreach (var item in splitted)
+            {
+                url += "/" + Uri.EscapeDataString(item);
+            }
+
+            currentPdf = new Uri($"file://{url}#page={page}");
             webView.Source = currentPdf;
             webView.Visible = true;
         }
