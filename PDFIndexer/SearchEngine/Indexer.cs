@@ -126,12 +126,31 @@ namespace PDFIndexer.SearchEngine
 
         public void RemoveIndex(string path, int page)
         {
-            //
+            var writer = Provider.GetIndexWriter();
+
+            BooleanQuery deleteQuery = new BooleanQuery
+            {
+                { new TermQuery(new Term("path", path)), Occur.MUST },
+                { new TermQuery(new Term("page", page.ToString())), Occur.MUST },
+            };
+            writer.DeleteDocuments(deleteQuery);
+            writer.Commit();
+
+            var dbCollection = DBContext.DB.GetCollection<IndexedDocument>("indexed");
+            dbCollection.DeleteMany(
+                LiteDB.Query.And(
+                    LiteDB.Query.EQ("Path", path),
+                    LiteDB.Query.GT("Page", page)));
         }
 
         public void RemoveIndexAllPages(string path)
         {
-            //
+            var writer = Provider.GetIndexWriter();
+            writer.DeleteDocuments(new TermQuery(new Term("path", path)));
+            writer.Commit();
+
+            var dbCollection = DBContext.DB.GetCollection<IndexedDocument>("indexed");
+            dbCollection.DeleteMany(LiteDB.Query.EQ("Path", path));
         }
 
         public void CleanupIndexes()
