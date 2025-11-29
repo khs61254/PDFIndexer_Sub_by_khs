@@ -1,6 +1,7 @@
 ﻿using LiteDB;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Search;
 using PDFIndexer.BackgroudTask;
 using PDFIndexer.BackgroundTask;
 using PDFIndexer.Journal;
@@ -50,6 +51,14 @@ namespace PDFIndexer.SearchEngine
 
                 using (PdfDocument pdf = PdfDocument.Open(path))
                 {
+                    // 기존 인덱스 제거
+                    BooleanQuery deleteQuery = new BooleanQuery
+                    {
+                        { new TermQuery(new Term("path", path)), Occur.MUST },
+                        { new TermQuery(new Term("isOCRData", "0")), Occur.MUST },
+                    };
+                    writer.DeleteDocuments(deleteQuery);
+
                     // 페이지 별로 인덱스
                     var pages = pdf.GetPages();
                     foreach (var page in pages)
@@ -57,14 +66,14 @@ namespace PDFIndexer.SearchEngine
                         // 프로그램 종료 체크
                         if (Program.Disposing) return;
 
+                        bool isLastPage = page.Number == pdf.NumberOfPages;
+
                         // 기본 메타데이터
                         Document doc = new Document
                         {
                             new TextField("title", filename, Field.Store.YES),
                             new StringField("path", path, Field.Store.YES),
                             new Int32Field("page", page.Number, Field.Store.YES),
-                            new StringField("md5", hash, Field.Store.YES),
-                            new StringField("lastModified", lastModified.ToString(), Field.Store.YES),
                             new StringField("isOCRData", "0", Field.Store.YES),
                         };
 
@@ -73,6 +82,7 @@ namespace PDFIndexer.SearchEngine
                         doc.Add(new TextField("content", content, Field.Store.YES));
 
                         // DB 업데이트
+                        dbCollection.Delete($"{path}//{page.Number}");
                         var dbItem = new IndexedDocument
                         {
                             _id = $"{path}//{page.Number}",
@@ -84,11 +94,20 @@ namespace PDFIndexer.SearchEngine
                         };
                         dbCollection.Upsert(dbItem);
 
+                        // 마지막 페이지 이후 DB 항목 제거
+                        if (isLastPage)
+                        {
+                            dbCollection.DeleteMany(
+                                LiteDB.Query.And(
+                                    LiteDB.Query.EQ("Path", path),
+                                    LiteDB.Query.GT("Page", page.Number)));
+                        }
+
                         // 인덱스 추가
                         writer.AddDocument(doc);
 
                         // 이미지 OCR task enqueue
-                        TaskManager.Enqueue(new OCRTask(path, page.Number));
+                        TaskManager.Enqueue(new OCRTask(path, page.Number, isLastPage));
                     }
 
                     // Logger.Write($"IndexPdfs - Index done: {path} with {pages.Count()} pages");
@@ -102,6 +121,16 @@ namespace PDFIndexer.SearchEngine
             Provider.MarkAsDirty();
 
             Logger.Write(JournalLevel.Info, "IndexPdfs 완료.");
+        }
+
+        public void RemoveIndex(string path, int page)
+        {
+            //
+        }
+
+        public void RemoveIndexAllPages(string path)
+        {
+            //
         }
 
         public void CleanupIndexes()
