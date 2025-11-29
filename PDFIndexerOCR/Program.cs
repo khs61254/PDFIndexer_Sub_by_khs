@@ -174,7 +174,12 @@ namespace PDFIndexerOCR
                                 var response = PipeResponse.ToJSON(res);
 
                                 stopwatch.Stop();
-                                Console.WriteLine($"[OCR] Result: {result.Text.Substring(0, 20).Replace("\n", " ")}{(result.Text.Length > 20 ? "..." : "")} (length: {result.Text.Length})");
+                                string preview = result.Text.Replace("\n", " ");
+                                if (preview.Length > 30)
+                                {
+                                    preview = $"{preview.Substring(0, 30)}{(result.Text.Length > 30 ? "..." : "")}";
+                                }
+                                Console.WriteLine($"[OCR] Result: {preview} (length: {result.Text.Length})");
                                 Console.WriteLine($"[OCR] Elapsed: {stopwatch.Elapsed}");
 
                                 writer.WriteLine(response);
