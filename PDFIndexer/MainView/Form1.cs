@@ -29,6 +29,8 @@ using PDFIndexer.SearchEngine;
 using PDFIndexer.Services;
 using PDFIndexer.SettingsView;
 using Microsoft.Toolkit.Uwp.Notifications;
+using PDFIndexer.BackgroundTask;
+using PDFIndexer.BackgroudTask;
 
 namespace PDFIndexer
 {
@@ -115,6 +117,11 @@ namespace PDFIndexer
             duplicateManagerView = new DuplicateManagerView();
 
             //Indexer.CleanupIndexes(indexer);
+
+            if (!LuceneProvider.NotIndexedYet)
+            {
+                TaskManager.Enqueue(new CheckMissingTask());
+            }
         }
 
         #region 웹뷰 관련
@@ -283,7 +290,7 @@ namespace PDFIndexer
 
             await Task.Run(() => Thread.Sleep(100));
 
-            if (!LuceneProvider.Ready)
+            if (LuceneProvider.NotIndexedYet)
             {
                 var result = MessageBox.Show("인덱싱이 없습니다.\n\n인덱싱을 지금 시작할까요?", "환영합니다", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
                 if (result == DialogResult.Yes)
