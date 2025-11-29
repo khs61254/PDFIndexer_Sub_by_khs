@@ -55,6 +55,8 @@ namespace PDFIndexer.BackgroundTask
 
         public static void Setup()
         {
+            if (!AppSettings.OCREnabled) return;
+
             if (OCRProcess != null) return;
             //if (!OCRProcess.HasExited) return;
 
@@ -104,6 +106,8 @@ namespace PDFIndexer.BackgroundTask
             {
                 while (!StopSignalReceived)
                 {
+                    if (!AppSettings.OCREnabled) break;
+
                     OCRTask task = null;
                     var Client = new NamedPipeClientStream(".", "PDFIndexerOCR", PipeDirection.InOut);
 
@@ -131,6 +135,9 @@ namespace PDFIndexer.BackgroundTask
 
                                 continue;
                             }
+
+                            // OCR 미활성화
+                            if (!AppSettings.OCREnabled) continue;
 
                             Logger.Write($"[OCRTask-IPC] {task.Path}/{task.Page} Start");
 
@@ -318,6 +325,8 @@ namespace PDFIndexer.BackgroundTask
             // 매 페이지마다 디스크 IO 작업이 일어나지만,
             // 메모리 절약을 우선으로 페이지 단위로 읽음
 
+            if (!AppSettings.OCREnabled) return;
+
             Logger.Write($"[OCRTask] {Path}/{Page} Start");
 
             var waitThread = new Thread(() =>
@@ -334,7 +343,7 @@ namespace PDFIndexer.BackgroundTask
                 {
                     image.TryGetPng(out var bytes);
                     // 최소 이미지 크기
-                    if (bytes.Length >= 1024)
+                    if (bytes != null && bytes.Length >= 1024)
                     {
                         Images.Enqueue(bytes);
                     }
