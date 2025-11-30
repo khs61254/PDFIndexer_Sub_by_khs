@@ -18,13 +18,14 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{DB5D378F-E124-45AE-8D81-644E07EE81D1}.Debug|x64.ActiveCfg = Debug|x64
-		{DB5D378F-E124-45AE-8D81-644E07EE81D1}.Debug|x64.Build.0 = Debug|x64
-		{DB5D378F-E124-45AE-8D81-644E07EE81D1}.Release|x64.ActiveCfg = Release|x64
-		{DB5D378F-E124-45AE-8D81-644E07EE81D1}.Release|x64.Build.0 = Release|x64
+		{DB5D378F-E124-45AE-8D81-644E07EE81D1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DB5D378F-E124-45AE-8D81-644E07EE81D1}.Debug|x64.Build.0 = Debug|Any CPU
+		{DB5D378F-E124-45AE-8D81-644E07EE81D1}.Release|x64.ActiveCfg = Release|Any CPU
+		{DB5D378F-E124-45AE-8D81-644E07EE81D1}.Release|x64.Build.0 = Release|Any CPU
 		{6AAF0B20-94DF-4F17-B04B-077443427F19}.Debug|x64.ActiveCfg = Debug|x64
 		{6AAF0B20-94DF-4F17-B04B-077443427F19}.Debug|x64.Build.0 = Debug|x64
 		{6AAF0B20-94DF-4F17-B04B-077443427F19}.Release|x64.ActiveCfg = Release|x64
+		{6AAF0B20-94DF-4F17-B04B-077443427F19}.Release|x64.Build.0 = Release|x64
 		{F32C1726-9779-4151-A21F-D40765570159}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{F32C1726-9779-4151-A21F-D40765570159}.Debug|x64.Build.0 = Debug|Any CPU
 		{F32C1726-9779-4151-A21F-D40765570159}.Release|x64.ActiveCfg = Release|Any CPU
