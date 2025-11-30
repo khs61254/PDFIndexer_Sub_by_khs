@@ -35,7 +35,7 @@ using Directory = System.IO.Directory;
 
 namespace PDFIndexer
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         private static readonly Properties.Settings AppSettings = Properties.Settings.Default;
 
@@ -92,7 +92,7 @@ namespace PDFIndexer
 
         private bool ProgressPanelInUse = false;
 
-        public Form1(LuceneProvider provider, bool backgroundMode = false)
+        public MainForm(LuceneProvider provider, bool backgroundMode = false)
         {
 #if DEBUG
             new DebugForm().Show();

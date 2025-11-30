@@ -1,6 +1,6 @@
 ﻿namespace PDFIndexer
 {
-    partial class Form1
+    partial class MainForm
     {
         /// <summary>
         /// Required designer variable.
@@ -52,6 +52,9 @@
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.flowLayoutPanel3 = new System.Windows.Forms.FlowLayoutPanel();
             this.SettingsButton = new System.Windows.Forms.Button();
+            this.IndexAllButton = new PDFIndexer.IconTextButtonControl();
+            this.IndexMissingButton = new PDFIndexer.IconTextButtonControl();
+            this.DuplicateManagerButton = new PDFIndexer.IconTextButtonControl();
             this.ProgressPanel = new System.Windows.Forms.TableLayoutPanel();
             this.IndexProgressPanel = new System.Windows.Forms.TableLayoutPanel();
             this.IndexProgressLabel = new System.Windows.Forms.Label();
@@ -60,9 +63,6 @@
             this.MainStatusStrip = new System.Windows.Forms.StatusStrip();
             this.BackgroundTaskStatusTextLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.BackgroundTaskStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.IndexAllButton = new PDFIndexer.IconTextButtonControl();
-            this.IndexMissingButton = new PDFIndexer.IconTextButtonControl();
-            this.DuplicateManagerButton = new PDFIndexer.IconTextButtonControl();
             this.TrayIconMenuStrip.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
@@ -349,6 +349,50 @@
             this.SettingsButton.UseVisualStyleBackColor = true;
             this.SettingsButton.Click += new System.EventHandler(this.SettingsButton_Click);
             // 
+            // IndexAllButton
+            // 
+            this.IndexAllButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
+            this.IndexAllButton.Content = "모두 인덱싱";
+            this.IndexAllButton.Font = new System.Drawing.Font("Malgun Gothic", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.IndexAllButton.Icon = global::PDFIndexer.Properties.Resources.DatabaseIcon;
+            this.IndexAllButton.IconSizeOffset = 0;
+            this.IndexAllButton.Location = new System.Drawing.Point(711, 4);
+            this.IndexAllButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.IndexAllButton.Name = "IndexAllButton";
+            this.IndexAllButton.Size = new System.Drawing.Size(114, 30);
+            this.IndexAllButton.TabIndex = 25;
+            this.IndexAllButton.UseVisualStyleBackColor = true;
+            this.IndexAllButton.Click += new System.EventHandler(this.IndexAllButton_Click);
+            // 
+            // IndexMissingButton
+            // 
+            this.IndexMissingButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
+            this.IndexMissingButton.Content = "새 파일 인덱싱";
+            this.IndexMissingButton.Font = new System.Drawing.Font("Malgun Gothic", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.IndexMissingButton.Icon = global::PDFIndexer.Properties.Resources.DatabaseUploadIcon;
+            this.IndexMissingButton.IconSizeOffset = 0;
+            this.IndexMissingButton.Location = new System.Drawing.Point(578, 4);
+            this.IndexMissingButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.IndexMissingButton.Name = "IndexMissingButton";
+            this.IndexMissingButton.Size = new System.Drawing.Size(127, 30);
+            this.IndexMissingButton.TabIndex = 26;
+            this.IndexMissingButton.UseVisualStyleBackColor = true;
+            // 
+            // DuplicateManagerButton
+            // 
+            this.DuplicateManagerButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
+            this.DuplicateManagerButton.Content = "중복 관리자";
+            this.DuplicateManagerButton.Font = new System.Drawing.Font("Malgun Gothic", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.DuplicateManagerButton.Icon = global::PDFIndexer.Properties.Resources.ContentCopyIcon;
+            this.DuplicateManagerButton.IconSizeOffset = 0;
+            this.DuplicateManagerButton.Location = new System.Drawing.Point(458, 4);
+            this.DuplicateManagerButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.DuplicateManagerButton.Name = "DuplicateManagerButton";
+            this.DuplicateManagerButton.Size = new System.Drawing.Size(114, 30);
+            this.DuplicateManagerButton.TabIndex = 24;
+            this.DuplicateManagerButton.UseVisualStyleBackColor = true;
+            this.DuplicateManagerButton.Click += new System.EventHandler(this.DuplicateMangerButton_Click);
+            // 
             // ProgressPanel
             // 
             this.ProgressPanel.ColumnCount = 1;
@@ -445,51 +489,7 @@
             this.BackgroundTaskStatusLabel.Text = "상태";
             this.BackgroundTaskStatusLabel.Visible = false;
             // 
-            // IndexAllButton
-            // 
-            this.IndexAllButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
-            this.IndexAllButton.Content = "모두 인덱싱";
-            this.IndexAllButton.Font = new System.Drawing.Font("Malgun Gothic", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.IndexAllButton.Icon = global::PDFIndexer.Properties.Resources.DatabaseIcon;
-            this.IndexAllButton.IconSizeOffset = 0;
-            this.IndexAllButton.Location = new System.Drawing.Point(711, 4);
-            this.IndexAllButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.IndexAllButton.Name = "IndexAllButton";
-            this.IndexAllButton.Size = new System.Drawing.Size(114, 30);
-            this.IndexAllButton.TabIndex = 25;
-            this.IndexAllButton.UseVisualStyleBackColor = true;
-            this.IndexAllButton.Click += new System.EventHandler(this.IndexAllButton_Click);
-            // 
-            // IndexMissingButton
-            // 
-            this.IndexMissingButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
-            this.IndexMissingButton.Content = "새 파일 인덱싱";
-            this.IndexMissingButton.Font = new System.Drawing.Font("Malgun Gothic", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.IndexMissingButton.Icon = global::PDFIndexer.Properties.Resources.DatabaseUploadIcon;
-            this.IndexMissingButton.IconSizeOffset = 0;
-            this.IndexMissingButton.Location = new System.Drawing.Point(578, 4);
-            this.IndexMissingButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.IndexMissingButton.Name = "IndexMissingButton";
-            this.IndexMissingButton.Size = new System.Drawing.Size(127, 30);
-            this.IndexMissingButton.TabIndex = 26;
-            this.IndexMissingButton.UseVisualStyleBackColor = true;
-            // 
-            // DuplicateManagerButton
-            // 
-            this.DuplicateManagerButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
-            this.DuplicateManagerButton.Content = "중복 관리자";
-            this.DuplicateManagerButton.Font = new System.Drawing.Font("Malgun Gothic", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.DuplicateManagerButton.Icon = global::PDFIndexer.Properties.Resources.ContentCopyIcon;
-            this.DuplicateManagerButton.IconSizeOffset = 0;
-            this.DuplicateManagerButton.Location = new System.Drawing.Point(458, 4);
-            this.DuplicateManagerButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.DuplicateManagerButton.Name = "DuplicateManagerButton";
-            this.DuplicateManagerButton.Size = new System.Drawing.Size(114, 30);
-            this.DuplicateManagerButton.TabIndex = 24;
-            this.DuplicateManagerButton.UseVisualStyleBackColor = true;
-            this.DuplicateManagerButton.Click += new System.EventHandler(this.DuplicateMangerButton_Click);
-            // 
-            // Form1
+            // MainForm
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.ClientSize = new System.Drawing.Size(1249, 781);
@@ -499,7 +499,7 @@
             this.Icon = global::PDFIndexer.Properties.Resources.PDFIndexerIcon;
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.MinimumSize = new System.Drawing.Size(810, 500);
-            this.Name = "Form1";
+            this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "PDFIndexer";
             this.WindowState = System.Windows.Forms.FormWindowState.Minimized;

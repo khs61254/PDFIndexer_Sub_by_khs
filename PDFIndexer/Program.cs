@@ -110,7 +110,7 @@ namespace PDFIndexer
             FileWatcher = new FileWatcher(AppSettings.BasePath);
 
             Logger.Write($"메인 UI 실행");
-            Application.Run(new Form1(LuceneProvider, backgroundLaunch));
+            Application.Run(new MainForm(LuceneProvider, backgroundLaunch));
 
             // 정리
             Cleanup();
