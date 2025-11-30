@@ -27,7 +27,7 @@ namespace PDFIndexer.SetupWizard.Phases
             MainUI.CloseWarning = false;
 
             // 재시작
-            Application.Restart();
+            Program.Restart();
         }
 
         public override void PrevButton_Click(object sender, EventArgs e)

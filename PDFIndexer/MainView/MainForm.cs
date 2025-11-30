@@ -500,7 +500,7 @@ namespace PDFIndexer
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (!forceQuit && AppSettings.CloseToTray)
+            if (!Program.DoRestart && !forceQuit && AppSettings.CloseToTray)
             {
                 e.Cancel = true;
                 HideMainUI();

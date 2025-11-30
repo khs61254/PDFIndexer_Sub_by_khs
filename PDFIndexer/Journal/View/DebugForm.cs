@@ -53,7 +53,7 @@ namespace PDFIndexer
             if (result == DialogResult.Yes)
             {
                 AppSettings.Reset();
-                Application.Restart();
+                Program.Restart();
             }
         }
 

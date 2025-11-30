@@ -71,7 +71,7 @@ namespace PDFIndexer.SettingsView
 
             if (result == DialogResult.Yes)
             {
-                Application.Restart();
+                Program.Restart();
             }
         }
 
@@ -101,7 +101,7 @@ namespace PDFIndexer.SettingsView
                     AppSettings.BasePath = dir;
                     AppSettings.Save();
 
-                    Application.Restart();
+                    Program.Restart();
                 }
             }
         }
@@ -182,7 +182,7 @@ namespace PDFIndexer.SettingsView
             if (result == DialogResult.Yes)
             {
                 AppSettings.Reset();
-                Application.Restart();
+                Program.Restart();
             }
         }
     }

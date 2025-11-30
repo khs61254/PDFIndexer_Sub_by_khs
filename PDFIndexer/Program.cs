@@ -26,6 +26,10 @@ namespace PDFIndexer
 
         private static FileWatcher FileWatcher;
 
+        private static Form MainUI;
+        private static bool _DoRestart = false;
+        public static bool DoRestart { get { return _DoRestart; } }
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -76,7 +80,13 @@ namespace PDFIndexer
             if (!AppSettings.DoneSetupWizard)
             {
                 Logger.Write($"Settings.DoneSetupWizard : false --> Setup wizard 실행");
-                Application.Run(new SetupWizardForm());
+                MainUI = new SetupWizardForm();
+                Application.Run(MainUI);
+
+                Mutex.ReleaseMutex();
+
+                if (_DoRestart)
+                    Application.Restart();
 
                 return;
             }
@@ -103,10 +113,17 @@ namespace PDFIndexer
             FileWatcher = new FileWatcher(AppSettings.BasePath);
 
             Logger.Write($"메인 UI 실행");
-            Application.Run(new MainForm(LuceneProvider, backgroundLaunch));
+            MainUI = new MainForm(LuceneProvider, backgroundLaunch);
+            Application.Run(MainUI);
 
             // 정리
             Cleanup();
+
+            if (_DoRestart)
+            {
+                Application.Restart();
+                Environment.Exit(0);
+            }
         }
 
         // 설정 기본값 저장
@@ -160,6 +177,14 @@ namespace PDFIndexer
                     key.Close();
                 }
             } catch { }
+        }
+
+        public static void Restart()
+        {
+            _DoRestart = true;
+
+            if (MainUI != null)
+                MainUI.Close();
         }
     }
 }
