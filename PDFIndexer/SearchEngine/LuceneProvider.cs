@@ -135,6 +135,11 @@ namespace PDFIndexer.SearchEngine
             {
                 IndexWriterConfig indexConfig = new IndexWriterConfig(luceneVersion, Analyzer);
                 indexConfig.OpenMode = OpenMode.CREATE_OR_APPEND;
+                if (IndexWriter.IsLocked(IndexDirectory))
+                {
+                    IndexWriter.Unlock(IndexDirectory);
+                }
+
                 Writer = new IndexWriter(IndexDirectory, indexConfig);
             }
 
