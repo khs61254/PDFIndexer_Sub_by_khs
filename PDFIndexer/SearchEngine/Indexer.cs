@@ -15,6 +15,8 @@ namespace PDFIndexer.SearchEngine
 {
     internal class Indexer
     {
+        private static readonly Properties.Settings AppSettings = Properties.Settings.Default;
+
         private LuceneProvider Provider;
 
         public delegate void IndexProgressUpdate(float progress);
@@ -113,7 +115,8 @@ namespace PDFIndexer.SearchEngine
                         writer.AddDocument(doc);
 
                         // 이미지 OCR task enqueue
-                        TaskManager.Enqueue(new OCRTask(path, page.Number, isLastPage));
+                        if (AppSettings.OCREnabled)
+                            TaskManager.Enqueue(new OCRTask(path, page.Number, isLastPage));
                     }
 
                     // Logger.Write($"IndexPdfs - Index done: {path} with {pages.Count()} pages");
