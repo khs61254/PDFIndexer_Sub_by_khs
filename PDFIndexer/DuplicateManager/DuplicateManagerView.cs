@@ -36,6 +36,8 @@ namespace PDFIndexer
 
         private async void LoadDuplicates()
         {
+            SelectedTotalSizeLabel.Text = "";
+
             tableLayoutPanel1.Controls.Clear();
             tableLayoutPanel1.RowCount = 0;
             tableLayoutPanel1.RowStyles.Clear();
@@ -73,6 +75,7 @@ namespace PDFIndexer
             foreach (var dup in duplicates) {
                 if (dup.Value.Count == 1) continue;
 
+                // 파일 사이즈
                 long size = sizes[dup.Key];
                 float totalSize = (float)Math.Round(size * dup.Value.Count / 1024f);
                 string totalSizeUnit = "KB";
@@ -81,13 +84,6 @@ namespace PDFIndexer
                     totalSize = (float)Math.Round(totalSize / 1024f, 2);
                     totalSizeUnit = "MB";
                 }
-                var label = new Label()
-                {
-                    Text = $"{dup.Value.Count}개 항목 ({totalSize}{totalSizeUnit})",
-                    AutoSize = true,
-                };
-                tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-                tableLayoutPanel1.Controls.Add(label);
 
                 var list = new DuplicateItemListControl
                 {
@@ -96,33 +92,98 @@ namespace PDFIndexer
                     CheckOnClick = true,
                     Margin = new Padding(0, 0, 0, 32),
                 };
+
+                // 헤더 테이블
+                var header = new TableLayoutPanel()
+                {
+                    RowCount = 0,
+                    ColumnCount = 0,
+                    Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                    AutoSize = true,
+                };
+                header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
+                header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+                header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+                header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+                //header.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
+
+                // 라벨
+                var label = new Label()
+                {
+                    Text = $"{dup.Value.Count}개 항목 ({totalSize}{totalSizeUnit})",
+                    AutoSize = true,
+                    Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left,
+                    TextAlign = ContentAlignment.MiddleLeft,
+                };
+                header.Controls.Add(label, 0, 0);
+
+                // 리스트 버튼 - 모두 선택
+                var selectAllButton = new Button()
+                {
+                    Text = "모두 선택",
+                    AutoSize = true,
+                };
+                selectAllButton.Click += (s, e) =>
+                {
+                    for (int i = 0; i < list.Items.Count; i++)
+                    {
+                        list.SetItemChecked(i, true);
+                    }
+                };
+                header.Controls.Add(selectAllButton, 1, 0);
+                // 리스트 버튼 - 모두 선택 취소
+                var selectNoneButton = new Button()
+                {
+                    Text = "모두 선택 취소",
+                    AutoSize = true,
+                };
+                selectNoneButton.Click += (s, e) =>
+                {
+                    for (int i = 0; i < list.Items.Count; i++)
+                    {
+                        list.SetItemChecked(i, false);
+                    }
+                };
+                header.Controls.Add(selectNoneButton, 2, 0);
+                // 리스트 버튼 - 선택 반전
+                var selectInvertButton = new Button()
+                {
+                    Text = "선택 반전",
+                    AutoSize = true,
+                };
+                selectInvertButton.Click += (s, e) =>
+                {
+                    for (int i = 0; i < list.Items.Count; i++)
+                    {
+                        list.SetItemChecked(i, !list.GetItemChecked(i));
+                    }
+                };
+                header.Controls.Add(selectInvertButton, 3, 0);
+
+                tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+                tableLayoutPanel1.Controls.Add(header);
+
                 foreach (var item in dup.Value)
                 {
                     list.Items.Add(item.Path);
                 }
-                list.SelectedIndexChanged += DuplicateItemList_SelectedIndexChanged;
+                list.ItemCheck += List_ItemCheck;
                 tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.AutoSize));
                 tableLayoutPanel1.Controls.Add(list);
                 list.ClientSize = new Size(1, list.GetItemHeight(0) * list.Items.Count);
             }
         }
 
-        private void DuplicateItemList_SelectedIndexChanged(object sender, EventArgs e)
+        private void List_ItemCheck(object sender, ItemCheckEventArgs e)
         {
             DuplicateItemListControl list = (DuplicateItemListControl)sender;
-
-            string[] items = new string[list.Items.Count];
-            list.Items.CopyTo(items, 0);
-
-            List<string> notChecked = new List<string>(items);
-            foreach (string item in list.CheckedItems)
+            string item = (string)list.Items[e.Index];
+            if (e.NewValue == CheckState.Checked)
             {
                 if (!SelectedFiles.ContainsKey(item))
                     SelectedFiles.Add(item, list.FileSize);
-                notChecked.Remove(item);
             }
-
-            foreach (string item in notChecked)
+            else
             {
                 SelectedFiles.Remove(item);
             }
@@ -133,15 +194,15 @@ namespace PDFIndexer
         private void UpdateSelectedTotalSize()
         {
             long total = SelectedFiles.Values.Sum();
-            float converted = (float)Math.Round(total / 1024f);
+            float converted = (float)Math.Round(total / 1024f, 2);
             string convertedUnit = "KB";
-            if (converted >= 1048576)
+            if (converted >= 1024)
             {
-                converted = (float)Math.Round(total / 1024f / 1024f);
+                converted = (float)Math.Round(total / 1024f / 1024f, 2);
                 convertedUnit = "MB";
-            } else if (converted >= 1024)
+            } else if (converted >= 1024 * 1024)
             {
-                converted = (float)Math.Round(total / 1024f / 1024f);
+                converted = (float)Math.Round(total / 1024f / 1024f / 1024f, 2);
                 convertedUnit = "GB";
             }
 
@@ -220,6 +281,51 @@ namespace PDFIndexer
                     message += $"- {fail.Value} : {fail.Key}\n";
                 }
                 MessageBox.Show(message, "삭제 완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void SelectNonebutton_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < tableLayoutPanel1.Controls.Count; i++)
+            {
+                var item = tableLayoutPanel1.Controls[i];
+                if (item is CheckedListBox list)
+                {
+                    for (int j = 0; j < list.Items.Count; j++)
+                    {
+                        list.SetItemChecked(j, false);
+                    }
+                }
+            }
+        }
+
+        private void SelectAllButton_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < tableLayoutPanel1.Controls.Count; i++)
+            {
+                var item = tableLayoutPanel1.Controls[i];
+                if (item is CheckedListBox list)
+                {
+                    for (int j = 0; j < list.Items.Count; j++)
+                    {
+                        list.SetItemChecked(j, true);
+                    }
+                }
+            }
+        }
+
+        private void InvertSelectionButton_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < tableLayoutPanel1.Controls.Count; i++)
+            {
+                var item = tableLayoutPanel1.Controls[i];
+                if (item is CheckedListBox list)
+                {
+                    for (int j = 0; j < list.Items.Count; j++)
+                    {
+                        list.SetItemChecked(j, !list.GetItemChecked(j));
+                    }
+                }
             }
         }
     }

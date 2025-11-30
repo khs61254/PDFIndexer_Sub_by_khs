@@ -69,10 +69,12 @@
             // 
             // tableLayoutPanel1
             // 
+            this.tableLayoutPanel1.AutoScroll = true;
             this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Location = new System.Drawing.Point(16, 61);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.Padding = new System.Windows.Forms.Padding(0, 0, 10, 0);
             this.tableLayoutPanel1.RowCount = 1;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.Size = new System.Drawing.Size(963, 439);
@@ -112,6 +114,7 @@
             this.InvertSelectionButton.Size = new System.Drawing.Size(93, 29);
             this.InvertSelectionButton.TabIndex = 4;
             this.InvertSelectionButton.UseVisualStyleBackColor = true;
+            this.InvertSelectionButton.Click += new System.EventHandler(this.InvertSelectionButton_Click);
             // 
             // SelectNonebutton
             // 
@@ -123,6 +126,7 @@
             this.SelectNonebutton.Size = new System.Drawing.Size(123, 29);
             this.SelectNonebutton.TabIndex = 3;
             this.SelectNonebutton.UseVisualStyleBackColor = true;
+            this.SelectNonebutton.Click += new System.EventHandler(this.SelectNonebutton_Click);
             // 
             // SelectAllButton
             // 
@@ -134,6 +138,7 @@
             this.SelectAllButton.Size = new System.Drawing.Size(97, 29);
             this.SelectAllButton.TabIndex = 3;
             this.SelectAllButton.UseVisualStyleBackColor = true;
+            this.SelectAllButton.Click += new System.EventHandler(this.SelectAllButton_Click);
             // 
             // DuplicateManagerView
             // 
