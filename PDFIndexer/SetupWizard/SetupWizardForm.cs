@@ -23,6 +23,7 @@ namespace PDFIndexer.SetupWizard
             Phases = new Phase[] {
                 new WelcomePhase(this),
                 new ChoosePathPhase(this),
+                new OCRPhase(this),
                 new DonePhase(this),
             };
 

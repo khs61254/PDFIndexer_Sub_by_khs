@@ -89,7 +89,7 @@ namespace PDFIndexer.SetupWizard.Phases
 
             Button SelectFolderButton = new Button()
             {
-                Text = "폴더 선택",
+                Text = "폴더 선택 (&O)",
             };
             InputPanel.Controls.Add(SelectFolderButton, 1, 0);
 

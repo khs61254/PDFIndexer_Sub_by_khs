@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SetupWizardForm));
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.MainTableLayout = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
@@ -108,11 +107,11 @@
             // PrevButton
             // 
             this.PrevButton.Enabled = false;
-            this.PrevButton.Location = new System.Drawing.Point(87, 3);
+            this.PrevButton.Location = new System.Drawing.Point(82, 3);
             this.PrevButton.Name = "PrevButton";
-            this.PrevButton.Size = new System.Drawing.Size(75, 23);
+            this.PrevButton.Size = new System.Drawing.Size(80, 23);
             this.PrevButton.TabIndex = 2;
-            this.PrevButton.Text = "< 이전";
+            this.PrevButton.Text = "< 이전 (&P)";
             this.PrevButton.UseVisualStyleBackColor = true;
             this.PrevButton.Click += new System.EventHandler(this.PrevButton_Click);
             // 
@@ -120,9 +119,9 @@
             // 
             this.NextButton.Location = new System.Drawing.Point(168, 3);
             this.NextButton.Name = "NextButton";
-            this.NextButton.Size = new System.Drawing.Size(75, 23);
+            this.NextButton.Size = new System.Drawing.Size(80, 23);
             this.NextButton.TabIndex = 1;
-            this.NextButton.Text = "계속 >";
+            this.NextButton.Text = "계속 (&N) >";
             this.NextButton.UseVisualStyleBackColor = true;
             this.NextButton.Click += new System.EventHandler(this.NextButton_Click);
             // 

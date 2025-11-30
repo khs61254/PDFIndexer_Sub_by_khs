@@ -114,6 +114,7 @@
     <Compile Include="SetupWizard\Phase.cs" />
     <Compile Include="SetupWizard\Phases\ChoosePathPhase.cs" />
     <Compile Include="SetupWizard\Phases\DonePhase.cs" />
+    <Compile Include="SetupWizard\Phases\OCRPhase.cs" />
     <Compile Include="SetupWizard\Phases\WelcomePhase.cs" />
     <Compile Include="SetupWizard\SetupWizardForm.cs">
       <SubType>Form</SubType>
