@@ -370,10 +370,11 @@ namespace PDFIndexer
                     });
                 }
 
-                new ToastContentBuilder()
-                    .AddText("백그라운드 작업 완료")
-                    .AddText($"{TaskManager.TasksDone}개 작업이 완료되었습니다.")
-                    .Show();
+                if (TaskManager.TasksDone > 1)
+                    new ToastContentBuilder()
+                        .AddText("백그라운드 작업 완료")
+                        .AddText($"{TaskManager.TasksDone}개 작업이 완료되었습니다.")
+                        .Show();
             };
 
             IndexProgressTextLabel.Text = LuceneProvider.Ready ? "Ready" : "Not Ready";
